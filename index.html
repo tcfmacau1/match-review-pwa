@@ -111,7 +111,12 @@ function v3settle(b){
  const r=legacysettle(x);if(b.betPeriod==='half')r.explanation=r.explanation.replace('全場','上半場');return r;
 }
 function evaluatePrediction(b,p){
- if(p.type==='score')return {status:'reference',label:'比分參考（不計命中率）'};
+ if(p.type==='score'){
+ const h=p.period==='half'?b.halfHome:b.homeScore,a=p.period==='half'?b.halfAway:b.awayScore;
+ if([h,a,p.home,p.away].some(v=>v==null||String(v).trim()===''||!Number.isFinite(Number(v))))return {status:'reference',label:'比分待驗證（不計命中率）'};
+ const hit=b.sport==='basketball'?Number(p.home)-Number(p.away)===Number(h)-Number(a):Number(p.home)===Number(h)&&Number(p.away)===Number(a);
+ return {status:'reference',referenceHit:hit,label:(hit?(b.sport==='basketball'?'分差命中':'比分命中'):'比分未命中')+'（不計命中率）'};
+ }
  if(p.type==='none')return {status:'excluded',label:'不推薦（不計命中率）'};
  const x={...b,homeScore:p.period==='half'?b.halfHome:b.homeScore,awayScore:p.period==='half'?b.halfAway:b.awayScore,predictionType:p.type,analysis:p.note||'預估',predictedSide:p.side,predictedHome:p.home,predictedAway:p.away,predictedTotal:p.line,aiReview:p.rating};
  if(['handicap','total'].includes(p.type)){
@@ -182,7 +187,7 @@ function aiView(){
  const matchKey=b=>JSON.stringify([b.sport,b.date,...[b.league,b.home,b.away].map(v=>String(v||'').normalize('NFKC').trim().replace(/\s+/g,' ').toLowerCase())]);
  const groups=new Map();items.forEach(x=>{const key=matchKey(x.b);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(x);});
  const platforms=[...new Set(['Claude','ChatGPT','Gemini','Perplexity','Grok','Copilot','未標註',...all.map(x=>x.p.platform)])];
- return `<div class="row ai-toolbar"><button class="primary" data-action="new-ai">＋ 新增獨立 AI 預估</button><label for="ai-platform">AI 平台</label><select id="ai-platform">${selectOptions([['all','全部平台'],...platforms.map(p=>[p,p])],aiPlatform)}</select></div><div class="cards">${card('預估準確率',percent(rated.length?correct/rated.length*100:null),`${rated.length} 項已判定；比分參考、不推薦、走盤及部分命中不納入`,'spark')}${card('預估項目',items.length,`${groups.size} 場賽事，可無投注`,'list')}${card('準確預估',correct,'按每項預估計算','target')}</div><div class="ai-compact-list">${[...groups.values()].map(group=>`<section class="ai-match"><header class="ai-match-heading"><h2>${esc(group[0].b.home)} vs ${esc(group[0].b.away)}</h2><small>${esc(group[0].b.date)} · ${esc(group[0].b.league)}</small></header>${group.map(({b,p,r})=>`<article class="ai-compact-row"><div class="ai-compact-main"><p>${esc(p.platform)} · ${p.period==='half'?'上半場':'全場'} · ${esc({winner:'賽果',score:'比分',total:'總分',handicap:'讓分',none:'不推薦',manual:'文字分析'}[p.type])} ${esc(p.type==='score'?p.home+' : '+p.away:p.type==='none'||p.type==='manual'?'':({home:'主隊',away:'客隊',draw:'和局',over:'大',under:'小'}[p.side]||'')+' '+(p.line||''))}</p></div><div class="ai-compact-actions"><span class="ai-result ${r.status==='correct'?'is-correct':r.status==='incorrect'?'is-incorrect':r.status==='partial'?'is-partial':'is-neutral'}">${esc(r.label)}</span><button class="ai-edit" data-edit="${esc(b.id)}" aria-label="編輯 ${esc(b.home)} 對 ${esc(b.away)} 的 ${esc(p.platform)} 預估">編輯</button></div></article>`).join('')}</section>`).join('')||'<p class="empty">目前篩選下沒有 AI 預估。</p>'}</div>`;
+ return `<div class="row ai-toolbar"><button class="primary" data-action="new-ai">＋ 新增獨立 AI 預估</button><label for="ai-platform">AI 平台</label><select id="ai-platform">${selectOptions([['all','全部平台'],...platforms.map(p=>[p,p])],aiPlatform)}</select></div><div class="cards">${card('預估準確率',percent(rated.length?correct/rated.length*100:null),`${rated.length} 項已判定；比分參考、不推薦、走盤及部分命中不納入`,'spark')}${card('預估項目',items.length,`${groups.size} 場賽事，可無投注`,'list')}${card('準確預估',correct,'按每項預估計算','target')}</div><div class="ai-compact-list">${[...groups.values()].map(group=>`<section class="ai-match"><header class="ai-match-heading"><h2>${esc(group[0].b.home)} vs ${esc(group[0].b.away)}</h2><small>${esc(group[0].b.date)} · ${esc(group[0].b.league)}</small></header>${group.map(({b,p,r})=>`<article class="ai-compact-row"><div class="ai-compact-main"><p>${esc(p.platform)} · ${p.period==='half'?'上半場':'全場'} · ${esc({winner:'賽果',score:'比分',total:'總分',handicap:'讓分',none:'不推薦',manual:'文字分析'}[p.type])} ${esc(p.type==='score'?p.home+' : '+p.away:p.type==='none'||p.type==='manual'?'':({home:'主隊',away:'客隊',draw:'和局',over:'大',under:'小'}[p.side]||'')+' '+(p.line||''))}</p></div><div class="ai-compact-actions"><span class="ai-result ${(r.status==='correct'||r.referenceHit===true)?'is-correct':(r.status==='incorrect'||r.referenceHit===false)?'is-incorrect':r.status==='partial'?'is-partial':'is-neutral'}">${esc(r.label)}</span><button class="ai-edit" data-edit="${esc(b.id)}" aria-label="編輯 ${esc(b.home)} 對 ${esc(b.away)} 的 ${esc(p.platform)} 預估">編輯</button></div></article>`).join('')}</section>`).join('')||'<p class="empty">目前篩選下沒有 AI 預估。</p>'}</div>`;
 }
 
 // v4 market rules: a rule snapshots its settlement contract in each saved record.
@@ -442,7 +447,7 @@ window.addEventListener('storage',e=>{if(e.key===KEY){toast('資料在另一個�
 
 let pwaRegistration=null;
 let offlineReady=false;
-function mobileSettings(){return `<section class="panel setting-panel mobile-settings"><h2>iPhone 與使用偏好 <small>v4.5.0</small></h2><p>設定自動儲存；預設值只套用於新記錄。</p><div class="form-grid" style="margin-top:16px">
+function mobileSettings(){return `<section class="panel setting-panel mobile-settings"><h2>iPhone 與使用偏好 <small>v4.5.1</small></h2><p>設定自動儲存；預設值只套用於新記錄。</p><div class="form-grid" style="margin-top:16px">
 <div class="field"><label for="pref-sport">預設運動</label><select id="pref-sport" data-pref="defaultSport">${selectOptions([['football','足球'],['basketball','籃球']],state.settings.defaultSport)}</select></div>
 <div class="field"><label for="pref-stake">預設投注金額（${currency()}）</label><input id="pref-stake" data-pref="defaultStake" type="number" inputmode="decimal" min="0.01" step="0.01" value="${esc(state.settings.defaultStake)}" placeholder="留空則每次填寫"></div>
 <div class="field"><label for="pref-size">記錄每頁筆數</label><select id="pref-size" data-pref="pageSize">${selectOptions([10,20,50],state.settings.pageSize)}</select></div>
