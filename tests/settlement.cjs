@@ -18,7 +18,8 @@ const system={...ticket,system:'all',legs:[leg,leg,leg]};eq(a.ticketCombos(syste
 eq(a.settle({...system,legs:[leg,leg,{...leg,homeScore:0,awayScore:1}]}).profit,0);
 eq(a.settle({...system,stake:100.01}).profit,400.03);
 const ai={...base,kind:'forecast',stake:'',odds:'',team:'',predictions:[{...a.newPrediction(),type:'score',home:2,away:1},{...a.newPrediction(),type:'total',side:'over',line:2.5},{...a.newPrediction(),type:'none'}]};a.validateBet(ai);
-eq(a.stats([ai]).stake,0);eq(a.stats([ai]).pending,0);eq(a.stats([ai]).evaluated,2);eq(a.stats([ai]).aiRate,100);
+eq(a.stats([ai]).stake,0);eq(a.stats([ai]).pending,0);eq(a.stats([ai]).evaluated,1);eq(a.stats([ai]).aiRate,100);
+eq(a.evaluatePrediction(base,{...a.newPrediction(),type:'score',home:99,away:99}).status,'reference');
 eq(a.evaluatePrediction(base,{...a.newPrediction(),type:'handicap',line:'-0.75'}).status,'partial');
 eq(a.evaluatePrediction({...base,halfHome:0,halfAway:1},{...a.newPrediction(),period:'half'}).status,'incorrect');
 eq(a.predictions({...base,predictionType:'score',predictedHome:2,predictedAway:1}).length,1);

@@ -1,4 +1,4 @@
-const CACHE='matchledger-pwa-v4.4.0';
+const CACHE='matchledger-pwa-v4.5.0';
 const ASSETS=['./','./index.html','./mobile.css','./manifest.webmanifest','./icons/apple-touch-icon.png','./icons/icon-192.png','./icons/icon-512.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
 self.addEventListener('activate',e=>e.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith('matchledger-pwa-')&&key!==CACHE)await caches.delete(key);await self.clients.claim();})()));
