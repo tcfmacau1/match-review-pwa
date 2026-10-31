@@ -151,7 +151,7 @@ function v3validateBet(b){
  legacyvalidateBet(x);
  if(b.kind!=='forecast'&&b.kind!=='parlay'&&b.betPeriod==='half')legacyvalidateBet({...x,homeScore:b.halfHome,awayScore:b.halfAway});
  if(b.predictions!==undefined&&!Array.isArray(b.predictions))throw Error('AI 預估格式無效');
- const ps=predictions(b);if(ps.length>30)throw Error('每場最多 30 項 AI 預估');if(b.kind==='forecast'&&!ps.length)throw Error('請新增至少一項 AI 預估');
+ const ps=ownPredictions(b);if(ps.length>30)throw Error('每場最多 30 項 AI 預估');if(b.kind==='forecast'&&!ps.length)throw Error('請新增至少一項 AI 預估');
  for(const p of ps){
  if(!['Claude','ChatGPT','Gemini','Perplexity','Grok','Copilot','未標註'].includes(p.platform)||!['winner','score','total','handicap','manual','none'].includes(p.type)||!['full','half'].includes(p.period))throw Error('AI 平台、類型或時段無效');
  if(['handicap','total'].includes(p.type)){parseLine(p.line);if(p.type==='total'&&parseLine(p.line).some(x=>x<0))throw Error('總分不可為負數');if(!(p.type==='total'?['over','under']:['home','away']).includes(p.side))throw Error('請選擇預估方向');}
@@ -452,7 +452,7 @@ window.addEventListener('storage',e=>{if(e.key===KEY){toast('資料在另一個�
 
 let pwaRegistration=null;
 let offlineReady=false;
-function mobileSettings(){return `<section class="panel setting-panel mobile-settings"><h2>iPhone 與使用偏好 <small>v4.6.0</small></h2><p>設定自動儲存；預設值只套用於新記錄。</p><div class="form-grid" style="margin-top:16px">
+function mobileSettings(){return `<section class="panel setting-panel mobile-settings"><h2>iPhone 與使用偏好 <small>v4.6.1</small></h2><p>設定自動儲存；預設值只套用於新記錄。</p><div class="form-grid" style="margin-top:16px">
 <div class="field"><label for="pref-sport">預設運動</label><select id="pref-sport" data-pref="defaultSport">${selectOptions([['football','足球'],['basketball','籃球']],state.settings.defaultSport)}</select></div>
 <div class="field"><label for="pref-stake">預設投注金額（${currency()}）</label><input id="pref-stake" data-pref="defaultStake" type="number" inputmode="decimal" min="0.01" step="0.01" value="${esc(state.settings.defaultStake)}" placeholder="留空則每次填寫"></div>
 <div class="field"><label for="pref-size">記錄每頁筆數</label><select id="pref-size" data-pref="pageSize">${selectOptions([10,20,50],state.settings.pageSize)}</select></div>
