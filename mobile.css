@@ -25,3 +25,12 @@ body{background:#e8edf4}.masthead{background:linear-gradient(100deg,#002b74,#005
 
 
 .ai-match-heading,.ai-match-heading h2{color:#123b65}.ai-match-heading{background:#f4f7fb}.ai-match-heading small{color:#53677e}
+
+/* Keep the card edit action beside the match heading. */
+@media(max-width:580px){
+.mobile-cards tbody tr{position:relative}
+.mobile-cards td[data-label="對賽 / 聯賽"],.mobile-cards td:nth-child(2){padding-right:48px!important;min-height:48px}
+.mobile-cards td[data-label="操作"]{position:absolute;top:8px;right:10px;padding:0!important;border:0;display:flex;align-items:center;justify-content:center}
+.mobile-cards td[data-label="操作"]:before{display:none}
+.mobile-cards td[data-label="操作"] button{width:44px;height:44px}
+}
