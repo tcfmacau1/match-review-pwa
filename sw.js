@@ -1,6 +1,6 @@
-const CACHE='matchledger-pwa-v4.6.1';
+const CACHE='matchledger-pwa-v4.6.2';
 const ASSETS=['./','./index.html','./mobile.css','./manifest.webmanifest','./icons/apple-touch-icon.png','./icons/icon-192.png','./icons/icon-512.png'];
-self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS.map(a=>new Request(a,{cache:'reload'}))))));
 self.addEventListener('activate',e=>e.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith('matchledger-pwa-')&&key!==CACHE)await caches.delete(key);await self.clients.claim();})()));
 self.addEventListener('message',e=>{if(e.data?.type==='SKIP_WAITING')self.skipWaiting();if(e.data?.type==='CHECK_READY')e.waitUntil((async()=>{const c=await caches.open(CACHE);const ready=(await Promise.all(ASSETS.map(a=>c.match(new URL(a,self.registration.scope).href)))).every(Boolean);e.source?.postMessage({type:'CACHE_READY',ready});})());});
 self.addEventListener('fetch',e=>{const u=new URL(e.request.url);if(e.request.method!=='GET'||u.origin!==location.origin||!u.href.startsWith(self.registration.scope))return;
